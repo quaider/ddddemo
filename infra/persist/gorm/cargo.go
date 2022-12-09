@@ -2,7 +2,10 @@ package gorm
 
 import (
 	"context"
+	"go-ddd/domain"
 	"go-ddd/domain/cargo"
+	"math/rand"
+	"strconv"
 )
 
 // 仅用于确保 CargoRepository 实现了 cargo.Repository 接口
@@ -18,7 +21,11 @@ func NewCargoRepositoryGorm() *CargoRepositoryGorm {
 	}
 }
 
-func (c *CargoRepositoryGorm) Find(ctx context.Context, trackingId *cargo.TrackingId) *cargo.Cargo {
+func (c *CargoRepositoryGorm) GenNextId() *domain.TrackingId {
+	return domain.NewTrackingId(strconv.Itoa(rand.Intn(1e9)))
+}
+
+func (c *CargoRepositoryGorm) Find(ctx context.Context, trackingId *domain.TrackingId) *cargo.Cargo {
 	return nil
 }
 

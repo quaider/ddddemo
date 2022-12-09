@@ -6,8 +6,6 @@ import (
 	"go-ddd/domain/voyage"
 	"go-ddd/infra/persist/gorm"
 	"go-ddd/infra/persist/mem"
-	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -18,6 +16,14 @@ type CargoConfig func(cs *CargoService) error
 type CargoService struct {
 	cargos  cargo.Repository
 	voyages voyage.Repository
+}
+
+func (s *CargoService) Cargos() cargo.Repository {
+	return s.cargos
+}
+
+func (s *CargoService) Voyages() voyage.Repository {
+	return s.voyages
 }
 
 // NewCargoService 根据 配置序列 创建 CargoService 实例
@@ -75,18 +81,13 @@ func WithGormVoyageRepository() CargoConfig {
 	return WithCargoRepository(cr)
 }
 
-func (s *CargoService) CreateCargo(from, to *location.Location) (*cargo.Cargo, error) {
-	specification, err := cargo.NewRouteSpecification(from, to, time.Now().Add(24*60*time.Hour))
+func (s *CargoService) CreateCargo(origin, destination *location.Location, arrivalDeadline time.Time) (*cargo.Cargo, error) {
+	specification, err := cargo.NewRouteSpecification(origin, destination, arrivalDeadline)
 	if err != nil {
 		return nil, err
 	}
 
-	return cargo.NewCargo(
-		cargo.NewTrackingId(genNextId()),
-		specification,
-	)
-}
+	trackingId := s.cargos.GenNextId()
 
-func genNextId() string {
-	return strconv.Itoa(rand.Intn(1e10))
+	return cargo.NewCargo(trackingId, specification)
 }

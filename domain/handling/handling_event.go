@@ -2,13 +2,14 @@ package handling
 
 import (
 	"errors"
+	"go-ddd/domain"
 	"go-ddd/domain/location"
 	"go-ddd/domain/voyage"
 	"time"
 )
 
 func (e EventType) RequiresVoyage() bool {
-	return bool(e)
+	return e.BoolValue()
 }
 
 func (e EventType) ProhibitsVoyage() bool {
@@ -24,11 +25,11 @@ type Event struct {
 	location         *location.Location
 	completionTime   time.Time // 事件完成事件
 	registrationTime time.Time // 事件注册事件
-	cargoTrackingId  string    // 关联的货物id (直接引用cargo会导致 import cycle)
+	cargoTrackingId  domain.TrackingId
 }
 
-func NewEventWithoutVoyage(eventType EventType, location *location.Location, completionTime time.Time, registrationTime time.Time, cargoTrackingId string) (*Event, error) {
-	if cargoTrackingId == "" {
+func NewEventWithoutVoyage(eventType EventType, location *location.Location, completionTime time.Time, registrationTime time.Time, cargoTrackingId domain.TrackingId) (*Event, error) {
+	if cargoTrackingId.Id() == "" {
 		return nil, errors.New("cargoTrackingId is required")
 	}
 
@@ -49,8 +50,8 @@ func NewEventWithoutVoyage(eventType EventType, location *location.Location, com
 	}, nil
 }
 
-func NewEvent(eventType EventType, voyage *voyage.Voyage, location *location.Location, completionTime, registrationTime time.Time, cargoTrackingId string) (*Event, error) {
-	if cargoTrackingId == "" {
+func NewEvent(eventType EventType, voyage *voyage.Voyage, location *location.Location, completionTime, registrationTime time.Time, cargoTrackingId domain.TrackingId) (*Event, error) {
+	if cargoTrackingId.Id() == "" {
 		return nil, errors.New("cargoTrackingId is required")
 	}
 
@@ -100,6 +101,6 @@ func (e *Event) RegistrationTime() time.Time {
 	return e.registrationTime
 }
 
-func (e *Event) CargoTrackingId() string {
+func (e *Event) CargoTrackingId() domain.TrackingId {
 	return e.cargoTrackingId
 }

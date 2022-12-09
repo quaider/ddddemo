@@ -2,6 +2,7 @@ package cargo
 
 import (
 	"errors"
+	"go-ddd/domain"
 	"go-ddd/domain/handling"
 	"go-ddd/domain/location"
 )
@@ -18,14 +19,14 @@ import (
 当货物的路线被重新安排时，在cargo聚合中需同步更新货物运送数据
 */
 type Cargo struct {
-	trackingId         *TrackingId         // 货物跟踪id, 唯一标识货物
+	trackingId         *domain.TrackingId  // 货物跟踪id, 唯一标识货物
 	origin             *location.Location  // 货物起始地，永不改变，初始从route specification中获取
 	routeSpecification *RouteSpecification // 路径规格，表明 货运的起始地、目的地、截止到达时间
 	itinerary          *Itinerary          // 货运航线，包含多个航程
 	delivery           *Delivery           // 货运历史
 }
 
-func NewCargo(trackingId *TrackingId, route *RouteSpecification) (*Cargo, error) {
+func NewCargo(trackingId *domain.TrackingId, route *RouteSpecification) (*Cargo, error) {
 	if trackingId == nil {
 		return nil, errors.New("tracking id is required")
 	}
@@ -66,7 +67,7 @@ func (c *Cargo) Delivery() *Delivery {
 	return c.delivery
 }
 
-func (c *Cargo) TrackingId() *TrackingId {
+func (c *Cargo) TrackingId() *domain.TrackingId {
 	return c.trackingId
 }
 

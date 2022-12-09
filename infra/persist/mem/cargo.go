@@ -2,7 +2,10 @@ package mem
 
 import (
 	"context"
+	"go-ddd/domain"
 	"go-ddd/domain/cargo"
+	"math/rand"
+	"strconv"
 )
 
 // 仅用于确保 CargoRepository 实现了 cargo.Repository 接口
@@ -14,13 +17,17 @@ type CargoRepository struct {
 
 func NewCargoRepository() *CargoRepository {
 	cr := &CargoRepository{
-		cargos: make(map[string]*cargo.Cargo, 8),
+		cargos: make(map[string]*cargo.Cargo),
 	}
 
 	return cr
 }
 
-func (c *CargoRepository) Find(ctx context.Context, trackingId *cargo.TrackingId) *cargo.Cargo {
+func (c *CargoRepository) GenNextId() *domain.TrackingId {
+	return domain.NewTrackingId(strconv.Itoa(rand.Intn(1e9)))
+}
+
+func (c *CargoRepository) Find(ctx context.Context, trackingId *domain.TrackingId) *cargo.Cargo {
 	return nil
 }
 
