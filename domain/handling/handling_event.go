@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-func (e EventType) RequiresVoyage() bool {
-	return e.BoolValue()
+func (t EventType) RequiresVoyage() bool {
+	return t.NeedCarrierMovement()
 }
 
-func (e EventType) ProhibitsVoyage() bool {
-	return !e.RequiresVoyage()
+func (t EventType) ProhibitsVoyage() bool {
+	return !t.RequiresVoyage()
 }
 
 // Event 用于注册事件，例如，在给定时间某个位置从承运人卸载货物 Cargo 时。
