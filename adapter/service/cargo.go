@@ -18,6 +18,10 @@ type CargoService struct {
 	voyages voyage.Repository
 }
 
+func NewCargoService(cargos cargo.Repository, voyages voyage.Repository) *CargoService {
+	return &CargoService{cargos: cargos, voyages: voyages}
+}
+
 func (s *CargoService) Cargos() cargo.Repository {
 	return s.cargos
 }
@@ -27,7 +31,7 @@ func (s *CargoService) Voyages() voyage.Repository {
 }
 
 // NewCargoService 根据 配置序列 创建 CargoService 实例
-func NewCargoService(configs ...CargoConfig) (*CargoService, error) {
+func NewCargoServiceWithConfig(configs ...CargoConfig) (*CargoService, error) {
 
 	cs := &CargoService{}
 	// 应用服务的所有配置

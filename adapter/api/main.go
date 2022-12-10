@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/golobby/container/v3"
+	"go-ddd/adapter/ioc"
 	"go-ddd/adapter/service"
 	domainCargo "go-ddd/domain/cargo"
 	"go-ddd/domain/handling"
@@ -18,11 +20,6 @@ var (
 	whLocation       = location.NewLocation("武汉", "430000")
 	bjLocation       = location.NewLocation("北京", "100000")
 	emptyItineraries = make([]*domainCargo.Itinerary, 0)
-
-	cargoService, _ = service.NewCargoService(
-		service.WithGormCargoRepository(),
-		service.WithMemoryVoyageRepository(),
-	)
 
 	handlingEventService = service.NewHandlingEventServiceImpl(
 		mem.NewLocationRepository(), mem.NewVoyageRepository(), mem.NewHandlingEventRepository())
@@ -90,6 +87,9 @@ func selectPreferedItinerary(itineraries []*domainCargo.Itinerary) *domainCargo.
 }
 
 func init() {
+
+	ioc.Bootstrap()
+
 	spew.Config = spew.ConfigState{
 		Indent:                  "\t",
 		DisablePointerAddresses: true,
@@ -98,27 +98,36 @@ func init() {
 
 func main() {
 
-	// 1.0 预定货运， 从上海运到北京
-	cargo := bookNewCargo(cargoService)
+	//cargoService := &service.CargoService{}
+	//container.MustResolve(container.Global, &cargoService)
 
-	// 1.1 查询满足路径规格的所有航线
-	itineraries := requestItineraryFromMockService(cargo)
+	// ioc with Closures
+	container.MustCall(container.Global, func(cargoService *service.CargoService) {
 
-	// 1.2 选定一个合适的航线
-	itinerary := selectPreferedItinerary(itineraries)
+		// 1.0 预定货运， 从上海运到北京
+		cargo := bookNewCargo(cargoService)
 
-	// 1.3 分配选定的航线
-	err := cargo.AssignToRoute(itinerary)
-	if err != nil {
-		panic(err)
-	}
+		// 1.1 查询满足路径规格的所有航线
+		itineraries := requestItineraryFromMockService(cargo)
 
-	// 1.4 handling
-	_ = handlingEventService.RegisterHandlingEvent(
-		toDate("2022-12-09"), *cargo.TrackingId(), "", shLocation.Unlocode(), handling.RECEIVE)
+		// 1.2 选定一个合适的航线
+		itinerary := selectPreferedItinerary(itineraries)
 
-	_ = handlingEventService.RegisterHandlingEvent(
-		toDate("2022-12-09"), *cargo.TrackingId(), voya_100.VoyageNumber(), shLocation.Unlocode(), handling.LOAD)
+		// 1.3 分配选定的航线
+		err := cargo.AssignToRoute(itinerary)
+		if err != nil {
+			panic(err)
+		}
 
-	spew.Dump(cargo)
+		// 1.4 handling
+		_ = handlingEventService.RegisterHandlingEvent(
+			toDate("2022-12-09"), *cargo.TrackingId(), "", shLocation.Unlocode(), handling.RECEIVE)
+
+		_ = handlingEventService.RegisterHandlingEvent(
+			toDate("2022-12-09"), *cargo.TrackingId(), voya_100.VoyageNumber(), shLocation.Unlocode(), handling.LOAD)
+
+		spew.Dump(cargo)
+
+	})
+
 }

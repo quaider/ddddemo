@@ -9,8 +9,12 @@ import (
 )
 
 type EventFactory struct {
-	voyageRepository   voyage.Repository
-	locationRepository location.Repository
+	voyageRepository   voyage.Repository   `container:"type"`
+	locationRepository location.Repository `container:"type"`
+}
+
+func init() {
+
 }
 
 func NewEventFactory(voyageRepository voyage.Repository, locationRepository location.Repository) *EventFactory {
