@@ -3,10 +3,11 @@ package service
 import (
 	"go-ddd/domain"
 	"go-ddd/domain/handling"
-	"go-ddd/domain/location"
-	"go-ddd/domain/voyage"
+
 	"log"
 	"time"
+
+	"github.com/asaskevich/EventBus"
 )
 
 var _ HandlingEventService = (*handlingEventServiceImpl)(nil)
@@ -21,13 +22,13 @@ type HandlingEventService interface {
 }
 
 type handlingEventServiceImpl struct {
-	locations location.Repository
-	voyages   voyage.Repository
-	events    handling.Repository
+	events       handling.Repository
+	eventFactory *handling.EventFactory
+	bus          EventBus.Bus // 应该自己封装一套接口，与EventBus的实现隔离
 }
 
-func NewHandlingEventServiceImpl(locations location.Repository, voyages voyage.Repository, events handling.Repository) HandlingEventService {
-	return &handlingEventServiceImpl{locations: locations, voyages: voyages, events: events}
+func NewHandlingEventServiceImpl(events handling.Repository, eventFactory *handling.EventFactory, bus EventBus.Bus) HandlingEventService {
+	return &handlingEventServiceImpl{events: events, eventFactory: eventFactory, bus: bus}
 }
 
 func (h *handlingEventServiceImpl) RegisterHandlingEvent(
@@ -38,8 +39,7 @@ func (h *handlingEventServiceImpl) RegisterHandlingEvent(
 	eventType handling.EventType) error {
 
 	registrationTime := time.Now()
-	event, err := handling.NewEventFactory(h.voyages, h.locations).
-		CreateHandlingEvent(registrationTime, completionTime, trackingId, voyageNumber, unlocode, eventType)
+	event, err := h.eventFactory.CreateHandlingEvent(registrationTime, completionTime, trackingId, voyageNumber, unlocode, eventType)
 	if err != nil {
 		return err
 	}
@@ -51,6 +51,7 @@ func (h *handlingEventServiceImpl) RegisterHandlingEvent(
 	}
 
 	// publish an event stating that a cargo has been handled
+	h.bus.Publish("cargo:cargoHandled", event)
 
 	log.Println("registered handling event")
 

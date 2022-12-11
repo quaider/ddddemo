@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	"github.com/asaskevich/EventBus"
 	"github.com/golobby/container/v3"
 	"go-ddd/adapter/service"
 	"go-ddd/domain/cargo"
@@ -32,6 +33,11 @@ func Bootstrap() {
 		return mem.NewLocationRepository()
 	})
 
+	// =========== install eventBus ===========
+	container.MustSingleton(c, func() EventBus.Bus {
+		return EventBus.New()
+	})
+
 	// =========== install factories ===========
 	// 注册时是指针，resolve时也必须是指针
 	container.MustSingleton(c, func(lr location.Repository, vr voyage.Repository) *handling.EventFactory {
@@ -43,5 +49,9 @@ func Bootstrap() {
 	// =========== install application services ===========
 	container.MustSingleton(c, func(cr cargo.Repository, vr voyage.Repository) *service.CargoService {
 		return service.NewCargoService(cr, vr)
+	})
+
+	container.MustSingleton(c, func(hr handling.Repository, factory *handling.EventFactory, bus EventBus.Bus) service.HandlingEventService {
+		return service.NewHandlingEventServiceImpl(hr, factory, bus)
 	})
 }
